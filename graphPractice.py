@@ -11,7 +11,7 @@ G = nx.Graph()
 
 G = nx.complete_graph(10)
 
-
+# Hi vin
 print(nx.info(G))
 
 
