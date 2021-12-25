@@ -6,6 +6,12 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import time
 
+class User(object):
+    def __init__(self, username, userID):
+        self.username = username
+        self.userID = userID
+
+
 # To set your environment variables in your terminal run the following line:
 # export 'BEARER_TOKEN'='AAAAAAAAAAAAAAAAAAAAAG1IXQEAAAAAUd1GAqrl4tKWAUyqcUWJ7oB5hE8%3DwxHZaWNPhe8JaQew1nDLRgqUHdA14GKbA9Z0OWoWRtt5rEnpOj'
 bearer_token = os.environ.get("BEARER_TOKEN")
@@ -37,7 +43,7 @@ def bearer_oauth(r):
 
 def connect_to_endpoint(url, params):
     response = requests.request("GET", url, auth=bearer_oauth, params=params)
-    print(response.status_code)
+    #print(response.status_code)
     if response.status_code != 200:
         raise Exception(
             "Request returned an error: {} {}".format(
@@ -52,45 +58,52 @@ def get_user_id(username):
     user = api.get_user(screen_name = username)
     return(user.id)
 
-def get_connected_users(username_list, user_id):
-    connected_users = [] 
-    following_id_list = []
-    for following_user in username_list: # Get Following list of each following user
-        following_id_list = list(following_user.keys())[0]
-
-        for following_user in following_id_list: #  Checks if following list contains start user
-            if following_user == user_id:
-                print("CONNECTION MADE!")
+def get_connected_users(following_users, start_user):
+    connected_users = []
+    for following_user in following_users: # Get Following list of each following user
+        following_username = following_user.username # gets username of following user
+        following_user_list = get_following_users(following_user) #Creates a list of following for following user
+        for following_following_user in following_user_list: #  Checks if following list contains start user
+            #print(following_user.username)
+            if int(following_following_user.userID) == int(start_user.userID):
+                print("CONNECTION MADE with " + str(following_username))
                 connected_users.append(following_user)
-
+            # else:
+            #     print(following_user.username + "does not follow start user")
+                
     if len(connected_users) != 0:
         return connected_users
     else:
+        print("OH HI MARK")
         return "NO CONNECTIONS"
     
-#def get_following_users2(username):
-  #  username_list = []
-  #  for user in tweepy.Cursor(api.get_friends, screen_name=username).items():
-  #      username_list.append({get_user_id(user.screen_name):user.screen_name})
-  #  return(username_list)
+def get_following_users2(username):
+    time.sleep(3)
+    username_list = []
+    for user in tweepy.Cursor(api.get_friends, screen_name=username).items():
+       username = user.screen_name
+       userID = get_user_id(user.screen_name)
+       following_user = User(username, userID)
+       username_list.append(following_user)
+       
+    return(username_list)
 
-def get_following_users(user_id):
-    time.sleep(0.05)
-    url = create_url(user_id)
+def get_following_users(start_user):
+    time.sleep(3)
+    print("getting following list")
+    url = create_url(start_user.userID)
     params = get_params()
     json_response = connect_to_endpoint(url, params)
     following_data = json.dumps(json_response, indent=4, sort_keys=True)
     
     data_list = json.loads(following_data)
-    #print(data_list['data'][0]['username']) 
-        #^ this was to test which part of the dictionary and list i needed to iterate through 
     username_list = []
 
     for i in range(len(data_list['data'])):
-        user = User()
-        user.username = data_list['data'][i]['username']
-        user.id = data_list['data'][i]['id']
-        username_list.append(user)
+        username = data_list['data'][i]['username']
+        id = data_list['data'][i]['id']
+        following_user = User(username, id)
+        username_list.append(following_user)
 
       #  username = data_list['data'][i]['username']
       #  user_id = data_list['data'][i]['id']
@@ -98,24 +111,28 @@ def get_following_users(user_id):
    
     return(username_list)
 
-def add_nodes(G, following_users):
-    following_usernames = []
-    for user in following_users:
-        username = list(user.values())[0]
-        following_usernames.append(username)
-    print(following_usernames)
-    G.add_nodes_from(following_usernames)
+def add_nodes(G, connected_users, username):
+    G.add_node(username)
+    connected_usernames = []
+    for user in connected_users:
+        following_username = user.username
+        print(following_username)
+        G.add_node(following_username)
+        G.add_edge(username, following_username)
 
 
-
+# EXECUTE CODE HERE ---------------------------------------------------------------------------------
 def main():
+
     username = "tweetgraphdev"
     user_id = get_user_id(username)
-    following_users = get_following_users(user_id)
-    print(get_connected_users(following_users, user_id))
+    start_user = User(username, user_id)
+    
+    following_users = get_following_users(start_user)
+    connected_users = get_connected_users(following_users, start_user)
 
     G = nx.Graph()
-    add_nodes(G, following_users)
+    add_nodes(G, connected_users, username)
     nx.draw(G, with_labels = True)
     plt.show()
     
@@ -123,7 +140,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-class User:
-    def __init__(self, username, id):
-        self.username = username
-        self.id = id
