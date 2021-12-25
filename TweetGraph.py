@@ -15,6 +15,10 @@ consumerSecret = "lFDGsXMZkh8LLES1JLXvoxGwh86x1cY61nk76bbxhFXCLoBBk1"
 accessToken = "1473779807800332288-7jgp19ZOh7OyccOS34wIQJHwSvtTA2"
 accessTokenSecret = "8cfSwjASHSaHvKH8iN9owkIdsWsvd6vm1VOXYA2uH9gQ7"
 
+auth = tweepy.OAuthHandler(consumerKey, consumerSecret)
+auth.set_access_token(accessToken, accessTokenSecret)
+api = tweepy.API(auth)
+
 # CONNECTING TO TWITTER API
 def create_url(user_id):
     return "https://api.twitter.com/2/users/{}/following".format(user_id)
@@ -45,9 +49,6 @@ def connect_to_endpoint(url, params):
 
 ## ACTIONS
 def get_user_id(username):
-    auth = tweepy.OAuthHandler(consumerKey, consumerSecret)
-    auth.set_access_token(accessToken, accessTokenSecret)
-    api = tweepy.API(auth)
     user = api.get_user(screen_name = username)
     return(user.id)
 
@@ -67,6 +68,12 @@ def get_connected_users(username_list, user_id):
     else:
         return "NO CONNECTIONS"
     
+#def get_following_users2(username):
+  #  username_list = []
+  #  for user in tweepy.Cursor(api.get_friends, screen_name=username).items():
+  #      username_list.append({get_user_id(user.screen_name):user.screen_name})
+  #  return(username_list)
+
 def get_following_users(user_id):
     time.sleep(0.05)
     url = create_url(user_id)
@@ -80,9 +87,14 @@ def get_following_users(user_id):
     username_list = []
 
     for i in range(len(data_list['data'])):
-        username = data_list['data'][i]['username']
-        user_id = data_list['data'][i]['id']
-        username_list.append({user_id:username}) # THIS IS AN ARRAY OF DICTIONARIES
+        user = User()
+        user.username = data_list['data'][i]['username']
+        user.id = data_list['data'][i]['id']
+        username_list.append(user)
+
+      #  username = data_list['data'][i]['username']
+      #  user_id = data_list['data'][i]['id']
+      #  username_list.append({user_id:username}) # THIS IS AN ARRAY OF DICTIONARIES
    
     return(username_list)
 
@@ -97,7 +109,8 @@ def add_nodes(G, following_users):
 
 
 def main():
-    user_id = get_user_id("VincentBaNguyen")
+    username = "tweetgraphdev"
+    user_id = get_user_id(username)
     following_users = get_following_users(user_id)
     print(get_connected_users(following_users, user_id))
 
@@ -109,3 +122,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+class User:
+    def __init__(self, username, id):
+        self.username = username
+        self.id = id
