@@ -97,9 +97,9 @@ def add_nodes(G, following_users):
 
 
 def main():
-    user_id = get_user_id("TwitterDev")
+    user_id = get_user_id("VincentBaNguyen")
     following_users = get_following_users(user_id)
-   # print(get_connected_users(following_users, user_id))
+    print(get_connected_users(following_users, user_id))
 
     G = nx.Graph()
     add_nodes(G, following_users)
