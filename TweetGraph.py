@@ -58,18 +58,16 @@ def get_user_id(username):
     user = api.get_user(screen_name = username)
     return(user.id)
 
-def get_connected_users(following_users, start_user):
+def get_connected_users(start_user):
+    following_users = get_following_users(start_user)
     connected_users = []
     for following_user in following_users: # Get Following list of each following user
         following_username = following_user.username # gets username of following user
-        following_user_list = get_following_users(following_user) #Creates a list of following for following user
+        following_user_list = get_following_users(following_user) # Creates a list of following for following user
         for following_following_user in following_user_list: #  Checks if following list contains start user
-            #print(following_user.username)
             if int(following_following_user.userID) == int(start_user.userID):
                 print("CONNECTION MADE with " + str(following_username))
                 connected_users.append(following_user)
-            # else:
-            #     print(following_user.username + "does not follow start user")
                 
     if len(connected_users) != 0:
         return connected_users
@@ -88,9 +86,9 @@ def get_following_users2(username):
        
     return(username_list)
 
-def get_following_users(start_user):
+def get_following_users(start_user: User):
     time.sleep(3)
-    print("getting following list")
+    print("getting following list of: " + str(start_user.username))
     url = create_url(start_user.userID)
     params = get_params()
     json_response = connect_to_endpoint(url, params)
@@ -116,7 +114,6 @@ def add_nodes(G, connected_users, username):
     connected_usernames = []
     for user in connected_users:
         following_username = user.username
-        print(following_username)
         G.add_node(following_username)
         G.add_edge(username, following_username)
 
@@ -127,9 +124,9 @@ def main():
     username = "tweetgraphdev"
     user_id = get_user_id(username)
     start_user = User(username, user_id)
+
     
-    following_users = get_following_users(start_user)
-    connected_users = get_connected_users(following_users, start_user)
+    connected_users = get_connected_users(start_user)
 
     G = nx.Graph()
     add_nodes(G, connected_users, username)
