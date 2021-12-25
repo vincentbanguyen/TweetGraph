@@ -6,10 +6,8 @@ import json
 # export 'BEARER_TOKEN'='AAAAAAAAAAAAAAAAAAAAAG1IXQEAAAAAUd1GAqrl4tKWAUyqcUWJ7oB5hE8%3DwxHZaWNPhe8JaQew1nDLRgqUHdA14GKbA9Z0OWoWRtt5rEnpOj'
 bearer_token = os.environ.get("BEARER_TOKEN")
 
-
-def create_url():
-    # Replace with user ID below
-    user_id = 2244994945
+# CONNECTING TO TWITTER API
+def create_url(user_id):
     return "https://api.twitter.com/2/users/{}/following".format(user_id)
 
 
@@ -38,28 +36,50 @@ def connect_to_endpoint(url, params):
         )
     return response.json()
 
+## ACTIONS
 
-def main():
-    url = create_url()
+
+def get_connected_users(username_list, user_id):
+    connected_users = [] 
+    following_id_list = []
+    for following_user in username_list: # Get Following list of each following user
+        following_id_list = list(following_user.keys())[0]
+
+        for following_user in following_id_list: #  Checks if following list contains start user
+            if following_user == user_id:
+                print("CONNECTION MADE!")
+                connected_users.append(following_user)
+
+    if len(connected_users) != 0:
+        return connected_users
+    else:
+        return "NO CONNECTIONS"
+    
+
+
+def get_following_users(user_id):
+    url = create_url(user_id)
     params = get_params()
     json_response = connect_to_endpoint(url, params)
-    data_print = json.dumps(json_response, indent=4, sort_keys=True)
-
-    print(data_print)
-    return data_print
+    following_data = json.dumps(json_response, indent=4, sort_keys=True)
     
-def get_usernames(data_print):
-    data_list = json.loads(data_print)
+    data_list = json.loads(following_data)
     #print(data_list['data'][0]['username']) 
         #^ this was to test which part of the dictionary and list i needed to iterate through 
     username_list = []
+
     for i in range(len(data_list['data'])):
         username = data_list['data'][i]['username']
-        user_ID = data_list['data'][i]['id']
-        username_list.append({user_ID:username})
-    print(username_list)
+        user_id = data_list['data'][i]['id']
+        username_list.append({user_id:username})
+   
     return(username_list)
 
 
+def main():
+    user_id = 2244994945
+    following_users = get_following_users(user_id)
+    print(get_connected_users(following_users, user_id))
+    
 if __name__ == "__main__":
     main()
