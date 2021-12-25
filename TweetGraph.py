@@ -3,6 +3,7 @@ import os
 import json
 import networkx as nx
 import matplotlib.pyplot as plt
+import time
 
 # To set your environment variables in your terminal run the following line:
 # export 'BEARER_TOKEN'='AAAAAAAAAAAAAAAAAAAAAG1IXQEAAAAAUd1GAqrl4tKWAUyqcUWJ7oB5hE8%3DwxHZaWNPhe8JaQew1nDLRgqUHdA14GKbA9Z0OWoWRtt5rEnpOj'
@@ -60,6 +61,7 @@ def get_connected_users(username_list, user_id):
 
 
 def get_following_users(user_id):
+    time.sleep(0.05)
     url = create_url(user_id)
     params = get_params()
     json_response = connect_to_endpoint(url, params)
@@ -77,11 +79,13 @@ def get_following_users(user_id):
    
     return(username_list)
 
-#def add_nodes(username_list):
-
-   # print(list(username_list[0].values()))
-   # following_user_list = list(username_list[0].values())
-    #G.add_nodes_from(following_user_list)
+def add_nodes(G, following_users):
+    following_usernames = []
+    for user in following_users:
+        username = list(user.values())[0]
+        following_usernames.append(username)
+    print(following_usernames)
+    G.add_nodes_from(following_usernames)
 
 
 
@@ -90,10 +94,10 @@ def main():
     following_users = get_following_users(user_id)
    # print(get_connected_users(following_users, user_id))
 
-    # G = nx.Graph()
-    #add_nodes(following_users)
-    # nx.draw(G, with_labels = True)
-    # plt.show()
+    G = nx.Graph()
+    add_nodes(G, following_users)
+    nx.draw(G, with_labels = True)
+    plt.show()
     
 
 if __name__ == "__main__":
