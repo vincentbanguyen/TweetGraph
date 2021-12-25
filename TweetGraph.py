@@ -1,6 +1,8 @@
 import requests
 import os
 import json
+import networkx as nx
+import matplotlib.pyplot as plt
 
 # To set your environment variables in your terminal run the following line:
 # export 'BEARER_TOKEN'='AAAAAAAAAAAAAAAAAAAAAG1IXQEAAAAAUd1GAqrl4tKWAUyqcUWJ7oB5hE8%3DwxHZaWNPhe8JaQew1nDLRgqUHdA14GKbA9Z0OWoWRtt5rEnpOj'
@@ -71,15 +73,28 @@ def get_following_users(user_id):
     for i in range(len(data_list['data'])):
         username = data_list['data'][i]['username']
         user_id = data_list['data'][i]['id']
-        username_list.append({user_id:username})
+        username_list.append({user_id:username}) # THIS IS AN ARRAY OF DICTIONARIES
    
     return(username_list)
+
+#def add_nodes(username_list):
+
+   # print(list(username_list[0].values()))
+   # following_user_list = list(username_list[0].values())
+    #G.add_nodes_from(following_user_list)
+
 
 
 def main():
     user_id = 2244994945
     following_users = get_following_users(user_id)
-    print(get_connected_users(following_users, user_id))
+   # print(get_connected_users(following_users, user_id))
+
+    # G = nx.Graph()
+    #add_nodes(following_users)
+    # nx.draw(G, with_labels = True)
+    # plt.show()
     
+
 if __name__ == "__main__":
     main()
