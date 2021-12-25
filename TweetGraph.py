@@ -1,4 +1,5 @@
 import requests
+import tweepy
 import os
 import json
 import networkx as nx
@@ -9,14 +10,17 @@ import time
 # export 'BEARER_TOKEN'='AAAAAAAAAAAAAAAAAAAAAG1IXQEAAAAAUd1GAqrl4tKWAUyqcUWJ7oB5hE8%3DwxHZaWNPhe8JaQew1nDLRgqUHdA14GKbA9Z0OWoWRtt5rEnpOj'
 bearer_token = os.environ.get("BEARER_TOKEN")
 
+consumerKey = "z0zWSSgYygacLBHnpoewDpgbh"
+consumerSecret = "lFDGsXMZkh8LLES1JLXvoxGwh86x1cY61nk76bbxhFXCLoBBk1"
+accessToken = "1473779807800332288-7jgp19ZOh7OyccOS34wIQJHwSvtTA2"
+accessTokenSecret = "8cfSwjASHSaHvKH8iN9owkIdsWsvd6vm1VOXYA2uH9gQ7"
+
 # CONNECTING TO TWITTER API
 def create_url(user_id):
     return "https://api.twitter.com/2/users/{}/following".format(user_id)
 
-
 def get_params():
     return {"user.fields": "created_at"}
-
 
 def bearer_oauth(r):
     """
@@ -26,7 +30,6 @@ def bearer_oauth(r):
     r.headers["Authorization"] = f"Bearer {bearer_token}"
     r.headers["User-Agent"] = "v2FollowingLookupPython"
     return r
-
 
 def connect_to_endpoint(url, params):
     response = requests.request("GET", url, auth=bearer_oauth, params=params)
@@ -39,8 +42,14 @@ def connect_to_endpoint(url, params):
         )
     return response.json()
 
-## ACTIONS
 
+## ACTIONS
+def get_user_id(username):
+    auth = tweepy.OAuthHandler(consumerKey, consumerSecret)
+    auth.set_access_token(accessToken, accessTokenSecret)
+    api = tweepy.API(auth)
+    user = api.get_user(screen_name = username)
+    return(user.id)
 
 def get_connected_users(username_list, user_id):
     connected_users = [] 
@@ -58,8 +67,6 @@ def get_connected_users(username_list, user_id):
     else:
         return "NO CONNECTIONS"
     
-
-
 def get_following_users(user_id):
     time.sleep(0.05)
     url = create_url(user_id)
@@ -90,7 +97,7 @@ def add_nodes(G, following_users):
 
 
 def main():
-    user_id = 2244994945
+    user_id = get_user_id("TwitterDev")
     following_users = get_following_users(user_id)
    # print(get_connected_users(following_users, user_id))
 
