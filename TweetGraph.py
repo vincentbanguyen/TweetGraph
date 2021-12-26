@@ -117,6 +117,15 @@ def add_nodes(G, connected_users, username):
         G.add_node(following_username)
         G.add_edge(username, following_username)
 
+# def test_exception_rate(start_user):
+#     i = 0
+#     while i != 182:
+#         get_following_users(start_user)
+#         i += 1
+#         print(i)
+
+
+
 
 # EXECUTE CODE HERE ---------------------------------------------------------------------------------
 def main():
@@ -132,7 +141,8 @@ def main():
     add_nodes(G, connected_users, username)
     nx.draw(G, with_labels = True)
     plt.show()
-    
+
+    #test_exception_rate(start_user)        # To test exception rate error
 
 if __name__ == "__main__":
     main()
