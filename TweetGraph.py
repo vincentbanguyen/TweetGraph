@@ -26,11 +26,6 @@ auth.set_access_token(accessToken, accessTokenSecret)
 api = tweepy.API(auth)
 
 # CONNECTING TO TWITTER API
-def create_url(user_id):
-    return "https://api.twitter.com/2/users/{}/following".format(user_id)
-
-def get_params():
-    return {"user.fields": "created_at"}
 
 def bearer_oauth(r):
     """
@@ -86,11 +81,32 @@ def get_following_users2(username):
        
     return(username_list)
 
-def get_following_users(start_user: User):
-    time.sleep(3)
-    print("getting following list of: " + str(start_user.username))
-    url = create_url(start_user.userID)
-    params = get_params()
+def get_profile_image(user: User):
+    url = "https://api.twitter.com/2/users/{}".format(user.userID)
+    params = {"user.fields": "profile_image_url"}
+    json_response = connect_to_endpoint(url, params)
+    following_data = json.dumps(json_response, indent=4, sort_keys=True)
+    
+    data_list = json.loads(following_data)
+    print(data_list)
+
+    
+def get_following_list_profile_images(user: User):
+    url = "https://api.twitter.com/2/users/{}/following".format(user.userID)
+    params = {"user.fields": "profile_image_url"}
+    json_response = connect_to_endpoint(url, params)
+    following_data = json.dumps(json_response, indent=4, sort_keys=True)
+    
+    data_list = json.loads(following_data)
+    print(data_list)
+
+
+def get_following_users(user: User):
+    #time.sleep(3)
+    print("getting following list of: " + str(user.username))
+    url = "https://api.twitter.com/2/users/{}/following".format(user.userID)
+
+    params = {"user.fields": "created_at"}
     json_response = connect_to_endpoint(url, params)
     following_data = json.dumps(json_response, indent=4, sort_keys=True)
     
@@ -117,12 +133,12 @@ def add_nodes(G, connected_users, username):
         G.add_node(following_username)
         G.add_edge(username, following_username)
 
-# def test_exception_rate(start_user):
-#     i = 0
-#     while i != 182:
-#         get_following_users(start_user)
-#         i += 1
-#         print(i)
+def test_exception_rate(start_user):
+    i = 0
+    while i != 182:
+        get_following_users(start_user)
+        i += 1
+        print(i)
 
 
 
@@ -134,13 +150,13 @@ def main():
     user_id = get_user_id(username)
     start_user = User(username, user_id)
 
-    
-    connected_users = get_connected_users(start_user)
+    get_profile_image(start_user)
+    # connected_users = get_connected_users(start_user)
 
-    G = nx.Graph()
-    add_nodes(G, connected_users, username)
-    nx.draw(G, with_labels = True)
-    plt.show()
+    # G = nx.Graph()
+    # add_nodes(G, connected_users, username)
+    # nx.draw(G, with_labels = True)
+    # plt.show()
 
     #test_exception_rate(start_user)        # To test exception rate error
 
