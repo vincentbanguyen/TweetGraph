@@ -5,11 +5,14 @@ import json
 import networkx as nx
 import matplotlib.pyplot as plt
 import time
+import numpy as np
+from skimage import io
 
 class User(object):
-    def __init__(self, username, userID):
+    def __init__(self, username, userID, userimgURL):
         self.username = username
         self.userID = userID
+        self.userimgURL = userimgURL
 
 
 # To set your environment variables in your terminal run the following line:
@@ -68,7 +71,7 @@ def get_connected_users(start_user):
         return connected_users
     else:
         print("OH HI MARK")
-        return "NO CONNECTIONS"
+        return []
     
 def get_following_users2(username):
     time.sleep(3)
@@ -81,14 +84,15 @@ def get_following_users2(username):
        
     return(username_list)
 
-def get_profile_image(user: User):
-    url = "https://api.twitter.com/2/users/{}".format(user.userID)
+def get_profile_image(user_ID: int): # RETURNS IMAGE URL OF INPUTTED USER ID
+    url = "https://api.twitter.com/2/users/{}".format(user_ID)
     params = {"user.fields": "profile_image_url"}
     json_response = connect_to_endpoint(url, params)
     following_data = json.dumps(json_response, indent=4, sort_keys=True)
     
     data_list = json.loads(following_data)
-    print(data_list)
+    image = data_list['data']['profile_image_url']
+    return image
 
     
 def get_following_list_profile_images(user: User):
@@ -98,7 +102,6 @@ def get_following_list_profile_images(user: User):
     following_data = json.dumps(json_response, indent=4, sort_keys=True)
     
     data_list = json.loads(following_data)
-    print(data_list)
 
 
 def get_following_users(user: User):
@@ -106,32 +109,32 @@ def get_following_users(user: User):
     print("getting following list of: " + str(user.username))
     url = "https://api.twitter.com/2/users/{}/following".format(user.userID)
 
-    params = {"user.fields": "created_at"}
+    params = {"user.fields": "created_at,profile_image_url"}
     json_response = connect_to_endpoint(url, params)
     following_data = json.dumps(json_response, indent=4, sort_keys=True)
     
     data_list = json.loads(following_data)
     username_list = []
+    if len(data_list) > 1:
+        for i in range(len(data_list['data'])):
+            username = data_list['data'][i]['username']
+            id = data_list['data'][i]['id']
+            image = data_list['data'][i]['profile_image_url']
+            following_user = User(username, id, image)
+            username_list.append(following_user)
 
-    for i in range(len(data_list['data'])):
-        username = data_list['data'][i]['username']
-        id = data_list['data'][i]['id']
-        following_user = User(username, id)
-        username_list.append(following_user)
-
-      #  username = data_list['data'][i]['username']
-      #  user_id = data_list['data'][i]['id']
-      #  username_list.append({user_id:username}) # THIS IS AN ARRAY OF DICTIONARIES
-   
     return(username_list)
 
-def add_nodes(G, connected_users, username):
-    G.add_node(username)
-    connected_usernames = []
-    for user in connected_users:
-        following_username = user.username
-        G.add_node(following_username)
-        G.add_edge(username, following_username)
+def add_nodes(G, connected_users, username, profile_images): # ADDING USER NODES TO GRAPH
+
+    if len(connected_users) > 0:
+        for user in connected_users:
+            following_username = user.username
+            img = io.imread(user.userimgURL)
+            G.add_node(following_username, image = img)
+            G.add_edge(username,following_username)
+            # profile_images.append(img)
+    
 
 def test_exception_rate(start_user):
     i = 0
@@ -145,18 +148,44 @@ def test_exception_rate(start_user):
 
 # EXECUTE CODE HERE ---------------------------------------------------------------------------------
 def main():
-
+    profile_images = []
     username = "tweetgraphdev"
     user_id = get_user_id(username)
-    start_user = User(username, user_id)
+    imgURL = get_profile_image(user_id)
+    start_user = User(username, user_id, imgURL)
+    profile_images.append(io.imread(imgURL))
+    user_profile_img = io.imread(imgURL)
+    get_following_users(start_user)
+    connected_users = get_connected_users(start_user)
 
-    get_profile_image(start_user)
-    # connected_users = get_connected_users(start_user)
+    G = nx.Graph()
+    add_nodes(G, connected_users, username, profile_images)
+    G.add_node(username, image = user_profile_img)
 
-    # G = nx.Graph()
-    # add_nodes(G, connected_users, username)
-    # nx.draw(G, with_labels = True)
-    # plt.show()
+    pos=nx.circular_layout(G)
+
+    fig=plt.figure(figsize=(5,5))
+    ax=plt.subplot(111)
+    ax.set_aspect('equal')
+    nx.draw_networkx_edges(G,pos,ax=ax)
+
+    plt.xlim(-1.5,1.5)
+    plt.ylim(-1.5,1.5)
+
+    trans=ax.transData.transform
+    trans2=fig.transFigure.inverted().transform
+
+    piesize=0.2 # this is the image size
+    p2=piesize/2.0
+    for n in G:
+        xx,yy=trans(pos[n]) # figure coordinates
+        xa,ya=trans2((xx,yy)) # axes coordinates
+        a = plt.axes([xa-p2,ya-p2, piesize, piesize])
+        a.set_aspect('equal')
+        a.imshow(G.nodes[n]['image'])
+        a.axis('off')
+    ax.axis('off')
+    plt.show()
 
     #test_exception_rate(start_user)        # To test exception rate error
 
