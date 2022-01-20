@@ -28,8 +28,9 @@ auth = tweepy.OAuthHandler(consumerKey, consumerSecret)
 auth.set_access_token(accessToken, accessTokenSecret)
 api = tweepy.API(auth)
 
-# CONNECTING TO TWITTER API
+counter = 0 #counts the number of follow pulls (should not exceed 15 per 15 min)
 
+# CONNECTING TO TWITTER API
 def bearer_oauth(r):
     """
     Method required by bearer token authentication.
@@ -41,7 +42,6 @@ def bearer_oauth(r):
 
 def connect_to_endpoint(url, params):
     response = requests.request("GET", url, auth=bearer_oauth, params=params)
-    #print(response.status_code)
     if response.status_code != 200:
         raise Exception(
             "Request returned an error: {} {}".format(
@@ -70,19 +70,8 @@ def get_connected_users(start_user):
     if len(connected_users) != 0:
         return connected_users
     else:
-        print("OH HI MARK")
+        print("User has no connections")
         return []
-    
-def get_following_users2(username):
-    time.sleep(3)
-    username_list = []
-    for user in tweepy.Cursor(api.get_friends, screen_name=username).items():
-       username = user.screen_name
-       userID = get_user_id(user.screen_name)
-       following_user = User(username, userID)
-       username_list.append(following_user)
-       
-    return(username_list)
 
 def get_profile_image(user_ID: int): # RETURNS IMAGE URL OF INPUTTED USER ID
     url = "https://api.twitter.com/2/users/{}".format(user_ID)
@@ -105,7 +94,12 @@ def get_following_list_profile_images(user: User):
 
 
 def get_following_users(user: User):
-    #time.sleep(3)
+    global counter
+    if counter == 15:
+        counter = 0
+        time.sleep(901)
+    counter+=1
+    print(counter)
     print("getting following list of: " + str(user.username))
     url = "https://api.twitter.com/2/users/{}/following".format(user.userID)
 
@@ -122,11 +116,9 @@ def get_following_users(user: User):
             image = data_list['data'][i]['profile_image_url']
             following_user = User(username, id, image)
             username_list.append(following_user)
-
     return(username_list)
 
 def add_nodes(G, connected_users, username, profile_images): # ADDING USER NODES TO GRAPH
-
     if len(connected_users) > 0:
         for user in connected_users:
             following_username = user.username
@@ -145,17 +137,15 @@ def test_exception_rate(start_user):
 
 
 
-
 # EXECUTE CODE HERE ---------------------------------------------------------------------------------
 def main():
     profile_images = []
-    username = "tweetgraphdev"
+    username = "VincentBaNguyen"
     user_id = get_user_id(username)
     imgURL = get_profile_image(user_id)
     start_user = User(username, user_id, imgURL)
     profile_images.append(io.imread(imgURL))
     user_profile_img = io.imread(imgURL)
-    get_following_users(start_user)
     connected_users = get_connected_users(start_user)
 
     G = nx.Graph()
@@ -175,7 +165,7 @@ def main():
     trans=ax.transData.transform
     trans2=fig.transFigure.inverted().transform
 
-    piesize=0.2 # this is the image size
+    piesize=0.1 # this is the image size
     p2=piesize/2.0
     for n in G:
         xx,yy=trans(pos[n]) # figure coordinates
