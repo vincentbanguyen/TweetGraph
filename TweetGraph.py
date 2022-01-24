@@ -191,7 +191,7 @@ def test_exception_rate(start_user):
 # EXECUTE CODE HERE ---------------------------------------------------------------------------------
 def main():
     profile_images = []
-    username = "SpaceX"
+    username = "nasa"
     user_id = get_user_id(username)
     imgURL = get_profile_image(user_id)
     start_user = User(username, user_id, imgURL)
@@ -215,8 +215,8 @@ def main():
             check_liked_same_tweet(likes_of_start_user, user)
             following_users_3rd = get_3following_users(user)
             add_nodes(G, following_users_3rd, user.username, profile_images) #third gen
-            # for user in following_users_3rd:
-            #     check_liked_same_tweet(likes_of_start_user, user)
+            for user in following_users_3rd:
+                check_liked_same_tweet(likes_of_start_user, user)
 
     
     pos=nx.circular_layout(G)
