@@ -73,17 +73,17 @@ def get_connected_users(start_user):
         print("User has no connections")
         return []
 
-def get_3connected_users(start_user):
+def get_3following_users(start_user): # Get First 3 Following of user
     following_users = get_following_users(start_user)
     first3_following = []
     count = 0
-    for following_user in following_users: # Get First 3 Following of user
+    for following_user in following_users:
         if count < 3:
             first3_following.append(following_user)
             count += 1
         else:
             return first3_following
-    print("User is following " + str(count) + " accounts")
+    print("User is only following " + str(count) + " accounts")
     return first3_following
 
 def get_profile_image(user_ID: int): # RETURNS IMAGE URL OF INPUTTED USER ID
@@ -160,18 +160,20 @@ def main():
     start_user = User(username, user_id, imgURL)
     profile_images.append(io.imread(imgURL))
     user_profile_img = io.imread(imgURL)
+
   #  connected_users = get_connected_users(start_user)
-    connected_users = get_3connected_users(start_user)
+
     G = nx.Graph()
-    add_nodes(G, connected_users, username, profile_images)
-    print(connected_users[0].username)
-    for user in connected_users:
-        connected_users_1stgen = get_3connected_users(user)
-        add_nodes(G, connected_users_1stgen, user.username, profile_images)
-        for user in connected_users_1stgen:
-            connected_users_2ndgen = get_3connected_users(user)
-            add_nodes(G, connected_users_2ndgen, user.username, profile_images)
-    G.add_node(username, image = user_profile_img)
+    G.add_node(username, image = user_profile_img) #start user
+
+    following_users_1st = get_3following_users(start_user)
+    add_nodes(G, following_users_1st, username, profile_images) #first gen
+    for user in following_users_1st:
+        following_users_2nd = get_3following_users(user)
+        add_nodes(G, following_users_2nd, user.username, profile_images) #second gen
+        for user in following_users_2nd:
+            following_users_3rd = get_3following_users(user)
+            add_nodes(G, following_users_3rd, user.username, profile_images) #third gen
     
 
     pos=nx.circular_layout(G)
