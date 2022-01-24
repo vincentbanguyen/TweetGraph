@@ -73,6 +73,19 @@ def get_connected_users(start_user):
         print("User has no connections")
         return []
 
+def get_3connected_users(start_user):
+    following_users = get_following_users(start_user)
+    first3_following = []
+    count = 0
+    for following_user in following_users: # Get First 3 Following of user
+        if count < 3:
+            first3_following.append(following_user)
+            count += 1
+        else:
+            return first3_following
+    print("User is following " + str(count) + " accounts")
+    return first3_following
+
 def get_profile_image(user_ID: int): # RETURNS IMAGE URL OF INPUTTED USER ID
     url = "https://api.twitter.com/2/users/{}".format(user_ID)
     params = {"user.fields": "profile_image_url"}
@@ -97,6 +110,7 @@ def get_following_users(user: User):
     global counter
     if counter == 15:
         counter = 0
+        print("Wait for 15 min")
         time.sleep(901)
     counter+=1
     print(counter)
@@ -146,11 +160,19 @@ def main():
     start_user = User(username, user_id, imgURL)
     profile_images.append(io.imread(imgURL))
     user_profile_img = io.imread(imgURL)
-    connected_users = get_connected_users(start_user)
-
+  #  connected_users = get_connected_users(start_user)
+    connected_users = get_3connected_users(start_user)
     G = nx.Graph()
     add_nodes(G, connected_users, username, profile_images)
+    print(connected_users[0].username)
+    for user in connected_users:
+        connected_users_1stgen = get_3connected_users(user)
+        add_nodes(G, connected_users_1stgen, user.username, profile_images)
+        for user in connected_users_1stgen:
+            connected_users_2ndgen = get_3connected_users(user)
+            add_nodes(G, connected_users_2ndgen, user.username, profile_images)
     G.add_node(username, image = user_profile_img)
+    
 
     pos=nx.circular_layout(G)
 
